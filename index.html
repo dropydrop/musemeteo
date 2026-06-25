@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
+  <title>MuseMeteo V4</title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: 'var(--background)',
+            foreground: 'var(--foreground)',
+            card: 'var(--card)',
+            'card-foreground': 'var(--card-foreground)',
+            primary: 'var(--primary)',
+            'primary-foreground': 'var(--primary-foreground)',
+            secondary: 'var(--secondary)',
+            'secondary-foreground': 'var(--secondary-foreground)',
+            muted: 'var(--muted)',
+            'muted-foreground': 'var(--muted-foreground)',
+            accent: 'var(--accent)',
+            'accent-foreground': 'var(--accent-foreground)',
+            border: 'var(--border)',
+            input: 'var(--input)',
+            ring: 'var(--ring)',
+          },
+          animation: {
+            'spin-slow': 'spin 3s linear infinite',
+            'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --background: #ffffff;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --card-foreground: #0f172a;
+      --primary: #2563eb;
+      --primary-foreground: #ffffff;
+      --secondary: #f1f5f9;
+      --secondary-foreground: #0f172a;
+      --muted: #f1f5f9;
+      --muted-foreground: #64748b;
+      --accent: #f1f5f9;
+      --accent-foreground: #0f172a;
+      --border: #e2e8f0;
+      --input: #e2e8f0;
+      --ring: #2563eb;
+    }
+    .dark {
+      --background: #020617;
+      --foreground: #f8fafc;
+      --card: #0f172a;
+      --card-foreground: #f8fafc;
+      --primary: #3b82f6;
+      --primary-foreground: #ffffff;
+      --secondary: #1e293b;
+      --secondary-foreground: #f8fafc;
+      --muted: #1e293b;
+      --muted-foreground: #94a3b8;
+      --accent: #1e293b;
+      --accent-foreground: #f8fafc;
+      --border: #1e293b;
+      --input: #1e293b;
+      --ring: #3b82f6;
+    }
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    * { border-color: var(--border); }
+    .overflow-x-auto::-webkit-scrollbar { height: 4px; }
+    .overflow-x-auto::-webkit-scrollbar-track { background: transparent; }
+    .overflow-x-auto::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 99px; }
+    .safe-area-inset-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .hero-gradient { transition: background 1s ease-in-out; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <div id="app" class="flex-1 flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="absolute top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+      <div class="flex items-center gap-3 px-4 h-16 max-w-4xl mx-auto w-full">
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="w-8 h-8 rounded-xl border border-border bg-card/50 flex items-center justify-center shadow-sm">
+            <div id="icon-logo" class="text-foreground"></div>
+          </div>
+          <span class="text-base font-bold tracking-tight hidden sm:inline">MuseMeteo</span>
+        </div>
+        <div class="flex-1 relative" id="search-container"></div>
+        <button id="theme-toggle" class="p-2.5 rounded-xl border border-border bg-card/50 hover:bg-accent transition-all shadow-sm">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-auto pb-10 pt-16">
+      <div class="max-w-4xl mx-auto px-4 py-6 space-y-6" id="content-area"></div>
+    </main>
+  </div>
+
+  <script>
+    // --- ICONS SVG (Functional approach for Vanilla JS) ---
+    const Icons = {
+      CloudRain: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>`,
+      Sun: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+      Droplets: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.09 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M17 18.5c1.37 0 2.5-1.14 2.5-2.51 0-.72-.35-1.4-.94-1.97S17.18 12.6 17 11.7c-.18.9-.71 1.76-1.43 2.33s-1.07 1.46-1.07 2.18c0 1.37 1.13 2.51 2.5 2.51z"/></svg>`,
+      MapPin: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+      Search: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+      Sprout: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M7 20h10"/><path d="M10 20c5.5-2.5 8-6.4 8-12a4 4 0 0 0-4-4c-5.6 0-9.5 2.5-12 8 0 1.5 1 2.5 2 2.5h4"/><path d="M10 20V14"/></svg>`,
+      Activity: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+      Navigation: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`,
+      Thermometer: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>`,
+      Cloud: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M17.5 19A4.5 4.5 0 0 0 22 14.5c0-2-1.35-3.7-3.21-4.2A5.5 5.5 0 0 0 8 9.5a5 5 0 0 0-4 4.87C4 16.93 6.07 19 8.62 19h8.88z"/></svg>`,
+      CloudLightning: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 8.58"/><path d="m13 11-4 6h6l-4 6"/></svg>`,
+      Snowflake: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/></svg>`,
+      CloudFog: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="16" y1="21" x2="8" y2="21"/></svg>`,
+      CloudDrizzle: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><line x1="8" y1="16" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="20"/><line x1="16" y1="16" x2="16" y2="18"/></svg>`,
+      AlertTriangle: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      Loader2: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin ${c}"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+      X: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+      RefreshCw: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M16 3h5v5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 21H3v-5"/></svg>`,
+      ShieldCheck: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 11 2 2 4-4"/></svg>`,
+      Sunrise: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M18 22H6"/><path d="m12 18-4-4h8z"/><path d="M12 2v8"/><path d="m5.22 10.22 1.42 1.42"/><path d="m17.36 11.64 1.42-1.42"/></svg>`,
+      Sunset: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M18 22H6"/><path d="m16 14-4 4-4-4"/><path d="M12 2v10"/><path d="m5.22 10.22 1.42 1.42"/><path d="m17.36 11.64 1.42-1.42"/></svg>`,
+      LayoutDashboard: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>`,
+      ExternalLink: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>`,
+      Map: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>`,
+      Wind: (s=20, c="") => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>`,
+    };
+
+    // --- CONFIGURATION DE LA MÉTÉO / CODES WMO ---
+    const WMO_CODES = {
+      0: { label: 'Ciel clair', icon: Icons.Sun, color: 'text-yellow-400', gradient: 'from-blue-600/20 to-amber-500/10' },
+      1: { label: 'Plutôt clair', icon: Icons.Sun, color: 'text-yellow-200', gradient: 'from-blue-600/10 to-amber-500/5' },
+      2: { label: 'Partiellement nuageux', icon: Icons.Cloud, color: 'text-gray-300', gradient: 'from-slate-800/50 to-slate-950' },
+      3: { label: 'Couvert', icon: Icons.Cloud, color: 'text-gray-400', gradient: 'from-slate-900 to-slate-950' },
+      45: { label: 'Brouillard', icon: Icons.CloudFog, color: 'text-gray-400', gradient: 'from-zinc-900 to-slate-950' },
+      48: { label: 'Brouillard givrant', icon: Icons.CloudFog, color: 'text-gray-300', gradient: 'from-zinc-900 to-slate-950' },
+      51: { label: 'Bruine légère', icon: Icons.CloudDrizzle, color: 'text-blue-300', gradient: 'from-blue-900/20 to-slate-950' },
+      53: { label: 'Bruine modérée', icon: Icons.CloudDrizzle, color: 'text-blue-400', gradient: 'from-blue-900/30 to-slate-950' },
+      55: { label: 'Bruine forte', icon: Icons.CloudDrizzle, color: 'text-blue-500', gradient: 'from-blue-900/40 to-slate-950' },
+      61: { label: 'Pluie faible', icon: Icons.CloudRain, color: 'text-blue-400', gradient: 'from-blue-950 to-slate-950' },
+      63: { label: 'Pluie modérée', icon: Icons.CloudRain, color: 'text-blue-500', gradient: 'from-blue-950 to-slate-950' },
+      65: { label: 'Pluie forte', icon: Icons.CloudRain, color: 'text-blue-600', gradient: 'from-blue-950 to-slate-950' },
+      71: { label: 'Neige faible', icon: Icons.Snowflake, color: 'text-white', gradient: 'from-sky-950 to-slate-950' },
+      73: { label: 'Neige modérée', icon: Icons.Snowflake, color: 'text-white', gradient: 'from-sky-950 to-slate-950' },
+      75: { label: 'Neige forte', icon: Icons.Snowflake, color: 'text-white', gradient: 'from-sky-950 to-slate-950' },
+      80: { label: 'Averses légères', icon: Icons.CloudRain, color: 'text-blue-400', gradient: 'from-blue-950 to-slate-950' },
+      81: { label: 'Averses modérées', icon: Icons.CloudRain, color: 'text-blue-500', gradient: 'from-blue-950 to-slate-950' },
+      82: { label: 'Averses violentes', icon: Icons.CloudRain, color: 'text-blue-600', gradient: 'from-blue-950 to-slate-950' },
+      95: { label: 'Orage', icon: Icons.CloudLightning, color: 'text-yellow-500', gradient: 'from-amber-950 to-slate-950' },
+      96: { label: 'Orage & Grêle', icon: Icons.CloudLightning, color: 'text-purple-500', gradient: 'from-purple-950 to-slate-950' },
+      99: { label: 'Orage violent', icon: Icons.CloudLightning, color: 'text-purple-600', gradient: 'from-purple-950 to-slate-950' },
+    };
+
+    const DEFAULT_CITY = { name: "Rennes", latitude: 48.1173, longitude: -1.6778, region: "Bretagne" };
+    const CACHE_KEY = "musemeteo_cache";
+    const CACHE_DURATION = 30 * 60 * 1000; // 30 mins
+
+    // --- UTILS ---
+    const formatH = (iso) => iso ? iso.slice(11, 16) : "--:--";
+    const getWmo = (code) => WMO_CODES[code] || WMO_CODES[2];
+    const getTempColor = (temp) => {
+      if (temp >= 30) return 'text-red-600';
+      if (temp >= 20) return 'text-orange-500';
+      if (temp >= 10) return 'text-yellow-500';
+      if (temp >= 0) return 'text-blue-700';
+      return 'text-sky-300';
+    };
+
+    // --- NOUVELLE FONCTION POUR LE DÉGRADÉ DYNAMIQUE ---
+    const getTempGradient = (temp) => {
+      // Couleurs RGBA correspondant aux classes de température
+      const gradients = {
+        hot: 'linear-gradient(to left, rgba(220, 38, 38, 0.40) 0%, rgba(180, 30, 30, 0.18) 40%, rgba(15, 23, 42, 0.60) 70%, rgba(2, 6, 23, 0.95) 100%)',
+        warm: 'linear-gradient(to left, rgba(249, 115, 22, 0.36) 0%, rgba(200, 90, 20, 0.16) 40%, rgba(15, 23, 42, 0.60) 70%, rgba(2, 6, 23, 0.95) 100%)',
+        mild: 'linear-gradient(to left, rgba(234, 179, 8, 0.28) 0%, rgba(180, 140, 10, 0.12) 40%, rgba(15, 23, 42, 0.60) 70%, rgba(2, 6, 23, 0.95) 100%)',
+        cool: 'linear-gradient(to left, rgba(29, 78, 216, 0.32) 0%, rgba(20, 60, 180, 0.14) 40%, rgba(15, 23, 42, 0.60) 70%, rgba(2, 6, 23, 0.95) 100%)',
+        cold: 'linear-gradient(to left, rgba(125, 211, 252, 0.24) 0%, rgba(80, 180, 230, 0.10) 40%, rgba(15, 23, 42, 0.60) 70%, rgba(2, 6, 23, 0.95) 100%)',
+      };
+
+      if (temp >= 30) return gradients.hot;
+      if (temp >= 20) return gradients.warm;
+      if (temp >= 10) return gradients.mild;
+      if (temp >= 0) return gradients.cool;
+      return gradients.cold;
+    };
+
+    const wetBulb = (t, rh) => t * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) + Math.atan(t + rh) - Math.atan(rh - 1.676331) + 0.00391838 * Math.pow(rh, 1.5) * Math.atan(0.023101 * rh) - 4.686035;
+    const deltaT = (t, rh) => Math.max(0, parseFloat((t - wetBulb(t, rh)).toFixed(1)));
+
+    const getDeltaTStatus = (val) => {
+      if (val < 2) return { label: "Risque élevé", color: "text-red-400" };
+      if (val < 4) return { label: "Sous-optimal", color: "text-amber-400" };
+      if (val <= 8) return { label: "Optimal", color: "text-emerald-400" };
+      return { label: "Trop sec", color: "text-orange-400" };
+    };
+
+    const getAqiInfo = (aqi) => {
+      if (aqi == null || aqi === 0) return { label: "N/A", color: "text-muted-foreground" };
+      if (aqi <= 20) return { label: "Bonne", color: "text-emerald-400" };
+      if (aqi <= 40) return { label: "Moyenne", color: "text-amber-400" };
+      if (aqi <= 60) return { label: "Dégradée", color: "text-orange-400" };
+      return { label: "Mauvaise", color: "text-red-400" };
+    };
+
+    const getUvInfo = (uv) => {
+      if (uv <= 2) return { label: "Faible", color: "text-emerald-400" };
+      if (uv <= 5) return { label: "Modéré", color: "text-yellow-400" };
+      if (uv <= 7) return { label: "Élevé", color: "text-orange-400" };
+      if (uv <= 10) return { label: "Très élevé", color: "text-red-400" };
+      return { label: "Extrême", color: "text-purple-400" };
+    };
+
+    const showToast = (msg, type = 'error') => {
+      const existing = document.querySelector('.weather-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = `weather-toast fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl border backdrop-blur-xl shadow-lg transition-all duration-300 translate-y-4 opacity-0 ${
+        type === 'error' 
+          ? 'bg-red-500/15 border-red-500/30 text-red-500 dark:text-red-400' 
+          : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-500 dark:text-emerald-400'
+      }`;
+
+      const icon = type === 'error' ? Icons.AlertTriangle(16, "shrink-0") : Icons.ShieldCheck(16, "shrink-0");
+      toast.innerHTML = `
+        ${icon}
+        <span class="text-xs font-bold leading-none">${msg}</span>
+      `;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    };
+
+    // --- STATE ---
+    const state = {
+      data: null,
+      loading: false,
+      error: null,
+      errorStack: null,
+      activeTab: "dashboard",
+      lastCity: JSON.parse(localStorage.getItem('last_city')) || DEFAULT_CITY,
+      isOffline: false
+    };
+
+    // --- SERVICES ---
+    const getVal = (obj, key, idx) => {
+      if (!obj) return null;
+      const val = obj[`${key}_arome_france`]?.[idx] ?? obj[`${key}_icon_seamless`]?.[idx] ?? obj[`${key}_best_match`]?.[idx] ?? obj[key]?.[idx];
+      return val === undefined ? null : val;
+    };
+
+    const fetchWeather = async (city, background = false) => {
+      if (!background) {
+        state.loading = true;
+        state.error = null;
+        state.errorStack = null;
+      }
+      render();
+
+      try {
+        const params = new URLSearchParams({
+          latitude: city.latitude, longitude: city.longitude,
+          current: "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,is_day",
+          hourly: "temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,soil_temperature_6cm,et0_fao_evapotranspiration,uv_index",
+          daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,uv_index_max,sunrise,sunset,et0_fao_evapotranspiration_sum",
+          models: "arome_france,icon_seamless,best_match",
+          timezone: "auto",
+          forecast_days: 7
+        });
+
+        const [weatherRes, aqiRes] = await Promise.all([
+          fetch(`https://api.open-meteo.com/v1/forecast?${params}`),
+          fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.latitude}&longitude=${city.longitude}&current=european_aqi`).catch(() => null)
+        ]);
+
+        if (!weatherRes.ok) throw new Error(`API Météo : ${weatherRes.status}`);
+        const wData = await weatherRes.json();
+        const aData = aqiRes ? await aqiRes.json() : null;
+
+        const bundle = processWeatherData(wData, aData, city);
+
+        state.data = bundle;
+        state.loading = false;
+        state.error = null;
+        state.isOffline = false;
+
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: bundle, city: city }));
+        localStorage.setItem('last_city', JSON.stringify(city));
+
+      } catch (err) {
+        if (!background) {
+          state.error = err.message;
+          state.errorStack = err.stack;
+        } else {
+          console.warn("Background refresh failed:", err);
+          state.isOffline = true;
+          showToast("Mise à jour impossible : mode hors-ligne activé", "error");
+        }
+        state.loading = false;
+      }
+      render();
+    };
+
+    const computeConfidence = (daily, idx) => {
+      if (!daily) return 50;
+
+      // Récupération des données des 3 modèles
+      const tArome = daily.temperature_2m_max_arome_france?.[idx];
+      const tIcon = daily.temperature_2m_max_icon_seamless?.[idx];
+      const tBm = daily.temperature_2m_max_best_match?.[idx];
+
+      const rArome = daily.precipitation_sum_arome_france?.[idx];
+      const rIcon = daily.precipitation_sum_icon_seamless?.[idx];
+      const rBm = daily.precipitation_sum_best_match?.[idx];
+
+      // ============================================================
+      // 1. SCORE THERMIQUE (T_score)
+      // ============================================================
+      let tScore = 100;
+      const hasArome = tArome != null;
+
+      if (hasArome) {
+        // Mode Trio : AROME comme référence
+        const diffIcon = tIcon != null ? Math.abs(tArome - tIcon) : 0;
+        const diffBm = tBm != null ? Math.abs(tArome - tBm) : 0;
+        // Pénalité progressive : chaque écart de 1°C = -4 points (au lieu de -12 avant)
+        tScore = 100 - (diffIcon * 4) - (diffBm * 2);
+        // Bonus si les 3 modèles sont très proches (< 2°C d'écart)
+        if (diffIcon < 2 && diffBm < 2 && tIcon != null && tBm != null) {
+          tScore = Math.min(100, tScore + 10);
+        }
+      } else {
+        // Mode Duo : ICON vs Best Match
+        if (tIcon != null && tBm != null) {
+          const diff = Math.abs(tIcon - tBm);
+          tScore = 100 - (diff * 5);
+        } else {
+          tScore = 70; // confiance par défaut en l'absence de comparaison
+        }
+      }
+      tScore = Math.min(100, Math.max(20, tScore));
+
+      // ============================================================
+      // 2. SCORE PLUVIOMÉTRIQUE (P_score)
+      // ============================================================
+      let pScore = 100;
+      const rainModels = [
+        hasArome ? (rArome != null && rArome > 0.5) : null,
+        rIcon != null && rIcon > 0.5,
+        rBm != null && rBm > 0.5
+      ].filter(v => v !== null);
+
+      if (rainModels.length >= 2) {
+        const rainCount = rainModels.filter(v => v === true).length;
+        const noRainCount = rainModels.filter(v => v === false).length;
+
+        if (rainCount === rainModels.length || noRainCount === rainModels.length) {
+          pScore = 100; // Tous les modèles sont d'accord sur la nature de l'événement
+        } else if (rainCount === 1 || noRainCount === 1) {
+          pScore = 60; // Un modèle est en désaccord
+        } else {
+          pScore = 30; // Les modèles sont également partagés
+        }
+
+        // Pénalité supplémentaire si AROME est en désaccord avec les autres (cas le plus critique)
+        if (hasArome) {
+          const aromeRain = rArome != null && rArome > 0.5;
+          const consensus = rainModels.filter(v => v !== null);
+          if (consensus.length >= 2) {
+            const otherRain = consensus.filter((v, i) => (hasArome && i === 0) ? false : v === true);
+            if (aromeRain !== (otherRain.length > 0)) {
+              pScore = Math.min(pScore, 40); // AROME contredit les autres
+            }
+          }
+        }
+      } else if (rainModels.length === 1) {
+        pScore = 50; // Pas assez de modèles pour comparer
+      }
+      pScore = Math.min(100, Math.max(20, pScore));
+
+      // ============================================================
+      // 3. PÉNALITÉ D'HORIZON (H_penalty)
+      // ============================================================
+      let hPenalty = 0;
+      if (idx === 0) hPenalty = 0;
+      else if (idx === 1) hPenalty = 5;
+      else if (idx === 2) hPenalty = 10;
+      else if (idx === 3) hPenalty = 20;
+      else if (idx === 4) hPenalty = 35;
+      else if (idx === 5) hPenalty = 55;
+      else if (idx >= 6) hPenalty = 75;
+
+      // ============================================================
+      // 4. SCORE FINAL
+      // ============================================================
+      const finalScore = (tScore * 0.6) + (pScore * 0.4) - hPenalty;
+      return Math.min(99, Math.max(1, Math.round(finalScore)));
+    };
+
+    const processWeatherData = (w, a, city) => {
+      if (!w || !w.hourly || !w.hourly.time) throw new Error("Données horaires manquantes");
+
+      const now = new Date();
+      let currentHIdx = w.hourly.time.findIndex(t => new Date(t) > now);
+      if (currentHIdx < 0) currentHIdx = 0;
+
+      const hourly = [];
+      for (let i = 0; i < 24; i++) {
+        const idx = currentHIdx + i;
+        if (!w.hourly.time[idx]) break;
+        hourly.push({
+          time: formatH(w.hourly.time[idx]),
+          temp: Math.round(getVal(w.hourly, "temperature_2m", idx) ?? 0),
+          prob: getVal(w.hourly, "precipitation_probability", idx) ?? 0,
+          precip: getVal(w.hourly, "precipitation", idx) ?? 0,
+          code: getVal(w.hourly, "weather_code", idx) ?? 0,
+          windSpeed: Math.round(getVal(w.hourly, "wind_speed_10m", idx) ?? 0),
+          humidity: getVal(w.hourly, "relative_humidity_2m", idx) ?? 0
+        });
+      }
+
+      const daily = (w.daily?.time || []).map((t, i) => ({
+        date: t,
+        day: new Date(t).toLocaleDateString('fr-FR', { weekday: 'short' }),
+        code: getVal(w.daily, "weather_code", i) ?? 0,
+        tempMax: Math.round(getVal(w.daily, "temperature_2m_max", i) ?? 0),
+        tempMin: Math.round(getVal(w.daily, "temperature_2m_min", i) ?? 0),
+        precipProb: getVal(w.daily, "precipitation_probability_max", i) ?? 0,
+        precipSum: getVal(w.daily, "precipitation_sum", i) ?? 0,
+        windMax: Math.round(getVal(w.daily, "wind_speed_10m_max", i) ?? 0),
+        confidence: computeConfidence(w.daily, i)
+      }));
+
+      const current = w.current || {};
+      const curTemp = Math.round(current.temperature_2m ?? 0);
+      const curRH = current.relative_humidity_2m ?? 50;
+
+      return {
+        city: city.name,
+        region: city.region,
+        lat: city.latitude,
+        lon: city.longitude,
+        temp: curTemp,
+        feels: Math.round(current.apparent_temperature ?? curTemp),
+        code: current.weather_code ?? 0,
+        humidity: curRH,
+        wind: Math.round(current.wind_speed_10m ?? 0),
+        gusts: Math.round(current.wind_gusts_10m ?? 0),
+        pressure: Math.round(current.surface_pressure ?? 1013),
+        uv: Math.round(getVal(w.daily, "uv_index_max", 0) ?? 0),
+        aqi: a?.current?.european_aqi || 0,
+        etp: getVal(w.hourly, "et0_fao_evapotranspiration", currentHIdx) ?? 0,
+        soilTemp: Math.round(getVal(w.hourly, "soil_temperature_6cm", currentHIdx) ?? curTemp - 2),
+        deltaT: deltaT(curTemp, curRH),
+        sunrise: getVal(w.daily, "sunrise", 0) ? formatH(getVal(w.daily, "sunrise", 0)) : "--:--",
+        sunset: getVal(w.daily, "sunset", 0) ? formatH(getVal(w.daily, "sunset", 0)) : "--:--",
+        precip24h: (() => {
+          let sum = 0;
+          for (let i = 0; i < 24; i++) {
+            const idx = currentHIdx + i;
+            if (!w.hourly.time[idx]) break;
+            sum += getVal(w.hourly, "precipitation", idx) ?? 0;
+          }
+          return parseFloat(sum.toFixed(1));
+        })(),
+        precipH: parseFloat((getVal(w.hourly, "precipitation", currentHIdx) ?? 0).toFixed(1)),
+        hourly,
+        daily
+      };
+    };
+
+    // --- UI RENDERERS ---
+    const render = () => {
+      renderContent();
+      renderSearch();
+      updateLogo();
+    };
+
+    const updateLogo = () => {
+      const el = document.getElementById('icon-logo');
+      if (el) el.innerHTML = Icons.Sun(18);
+    };
+
+    const renderContent = () => {
+      const area = document.getElementById('content-area');
+
+      if (state.error) {
+        area.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <div class="bg-red-500/10 p-4 rounded-full mb-4">${Icons.AlertTriangle(48, "text-red-500")}</div>
+            <h2 class="text-xl font-bold mb-2">Oups ! Une erreur est survenue</h2>
+            <p class="text-muted-foreground max-w-sm mb-4">${state.error}</p>
+            ${state.errorStack ? `<details class="text-left text-[10px] text-muted-foreground mb-6 max-w-xs overflow-auto"><summary>Détails techniques</summary><pre class="mt-2">${state.errorStack}</pre></details>` : ''}
+            <button onclick="retry()" class="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Réessayer</button>
+          </div>`;
+        return;
+      }
+
+      if (state.loading && !state.data) {
+        area.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-24 text-center">
+            <div class="mb-4">${Icons.Loader2(48, "text-primary")}</div>
+            <p class="text-muted-foreground font-medium animate-pulse">Chargement des données météo...</p>
+          </div>`;
+        return;
+      }
+
+      if (state.data) {
+        const d = state.data;
+        const wmo = getWmo(d.code);
+
+        area.innerHTML = `
+          <!-- Hero Section -->
+          <div class="hero-gradient relative overflow-hidden rounded-3xl p-6 md:p-10 shadow-2xl shadow-blue-500/10" style="background: ${getTempGradient(d.temp)};">
+            <!-- Icône météo colorée avec la couleur de la température (taille 144, opacité 90%) -->
+            <div class="absolute top-0 right-0 p-8 opacity-90 pointer-events-none ${getTempColor(d.temp)}">
+              ${wmo.icon(144)}
+            </div>
+            
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-8">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 text-foreground/80">
+                    ${Icons.MapPin(16)}
+                    <span class="text-sm font-bold uppercase tracking-widest">${d.city}</span>
+                  </div>
+                  <p class="text-[11px] text-muted-foreground font-medium">${d.region}</p>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  ${state.isOffline ? `<div class="px-2 py-0.5 bg-orange-500/20 border border-orange-500/30 rounded-full"><span class="text-[9px] font-bold text-orange-400 uppercase tracking-tighter">Hors ligne</span></div>` : ''}
+                </div>
+              </div>
+
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <div class="flex items-start gap-1">
+                    <span class="text-7xl md:text-8xl font-bold tracking-tighter leading-none ${getTempColor(d.temp)}">${d.temp}°</span>
+                  </div>
+                  <div class="flex items-center gap-3 mt-4">
+                    <span class="text-sm font-semibold text-foreground/90">${wmo.label}</span>
+                    <div class="h-4 w-px bg-foreground/20"></div>
+                    <span class="text-xs font-medium text-muted-foreground">Ressenti <b class="text-foreground">${d.feels}°</b></span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                   ${badge("🌅 " + d.sunrise)}
+                   ${badge("🌇 " + d.sunset)}
+                   ${badge(Icons.Droplets(14) + " " + d.humidity + "%")}
+                   ${badge(Icons.Wind(14) + " " + d.wind + "-" + d.gusts + " km/h")}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hourly Scroll -->
+          <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Prochaines 24 heures</h3>
+            <div class="overflow-x-auto pb-4 -mx-1 px-1">
+              <div class="flex gap-3">
+                ${d.hourly.map((h, i) => `
+                  <div class="flex flex-col items-center gap-3 p-4 min-w-[100px] rounded-2xl border ${i===0 ? 'bg-primary/10 border-primary/30' : 'bg-card/50 border-border/50'} backdrop-blur-sm">
+                    <span class="text-[11px] font-black uppercase ${i===0 ? 'text-primary' : 'text-muted-foreground'}">${i===0 ? 'Maint.' : h.time}</span>
+                    <div class="${getWmo(h.code).color}">${getWmo(h.code).icon(28)}</div>
+                    <span class="text-lg font-black">${h.temp}°</span>
+                    <div class="w-full space-y-2">
+                       <div class="flex justify-between text-[9px] font-bold text-muted-foreground uppercase">
+                         <span>Pluie</span>
+                         <span class="text-blue-400">${h.prob}%</span>
+                       </div>
+                       <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                         <div class="h-full bg-blue-500 transition-all duration-1000" style="width: ${h.prob}%"></div>
+                       </div>
+                       <div class="text-center text-[9px] font-medium text-muted-foreground uppercase">
+                         💨 ${h.windSpeed} <span class="text-[7px]">km/h</span>
+                       </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 7 Day Forecast -->
+          <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Prévisions 7 jours</h3>
+            <div class="space-y-2">
+              ${d.daily.map((day, i) => `
+                <div class="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-accent/30 transition-colors group">
+                  <span class="w-10 text-xs font-black uppercase text-muted-foreground">${i===0 ? 'Auj.' : day.day}</span>
+                  <div class="shrink-0 ${getWmo(day.code).color}">${getWmo(day.code).icon(24)}</div>
+
+                  <div class="hidden sm:flex items-center gap-2 w-20">
+                    <span class="text-[10px] font-bold text-blue-400">${day.precipProb}%</span>
+                    <span class="text-[10px] text-muted-foreground/60">${day.precipSum}mm</span>
+                  </div>
+
+                  <div class="flex-1 flex items-center gap-3">
+                    <span class="text-xs font-bold text-blue-400 w-8 text-right">${day.tempMin}°</span>
+                    <div class="flex-1 h-2 rounded-full bg-muted relative overflow-hidden">
+                       <div class="absolute inset-0 bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400 opacity-20"></div>
+                       <div class="h-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400 rounded-full" style="width: 100%; opacity: 0.1"></div>
+                    </div>
+                    <span class="text-xs font-bold text-amber-500 w-8">${day.tempMax}°</span>
+                  </div>
+
+                  <div class="flex items-center gap-2 px-3 py-1 rounded-full border border-border/50 bg-muted/50">
+                    ${Icons.ShieldCheck(12, day.confidence > 70 ? "text-emerald-400" : (day.confidence > 40 ? "text-amber-400" : "text-red-400"))}
+                    <span class="text-[10px] font-black">${day.confidence}%</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Agricultural Metrics -->
+          <div class="space-y-4">
+             <h3 class="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Indicateurs Agricoles</h3>
+             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                ${precipCard(d.precip24h, d.precipH)}
+                ${metricCard(Icons.Sprout(20), "ETP", d.etp.toFixed(1), "mm/h", "Evapotranspiration FAO", "text-emerald-400")}
+                ${metricCard(Icons.Thermometer(20), "Sol 6cm", d.soilTemp, "°C", "T° sol profondeur", "text-amber-400")}
+                ${metricCard(Icons.Activity(20), "Delta T", d.deltaT, "°C", getDeltaTStatus(d.deltaT).label, getDeltaTStatus(d.deltaT).color)}
+                ${metricCard(Icons.Activity(20), "Qualité Air", d.aqi || 0, "EAQI", `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 ${getAqiInfo(d.aqi).color}">Air : ${getAqiInfo(d.aqi).label}</span>`, "")}
+                ${metricCard(Icons.Sun(20), "Indice UV", d.uv || 0, "Index", `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 ${getUvInfo(d.uv).color}">UV : ${d.uv}</span>`, "")}
+             </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="pt-6 pb-4 space-y-4">
+            <!-- RainViewer link -->
+            <a href="https://www.rainviewer.com/map.html?loc=${d.lat},${d.lon},8&oFa=0&oC=0&oU=0&oCS=1&oF=0&oAP=1&c=1&o=83&lm=0&layer=radar&sm=1&sn=1"
+               target="_blank" rel="noopener noreferrer"
+               class="flex items-center justify-center gap-3 w-full px-5 py-4 rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 transition-all duration-200 group shadow-sm hover:shadow-blue-500/10 hover:shadow-md">
+              <span class="shrink-0">${Icons.CloudRain(20, "text-blue-400 group-hover:text-blue-300 transition-colors")}</span>
+              <span class="text-sm font-bold tracking-tight">Ouvrir le radar de pluie en temps réel</span>
+              <span class="ml-auto text-base leading-none">↗</span>
+            </a>
+            <!-- Source + Refresh -->
+            <div class="flex items-center justify-end gap-4">
+              <button onclick="retry()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-accent text-[10px] font-bold uppercase transition-all shrink-0">
+                ${Icons.RefreshCw(12)} Actualiser
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    };
+
+    const badge = (text) => {
+      return `<span class="px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-xs font-bold text-foreground/90 whitespace-nowrap">${text}</span>`;
+    };
+
+    const metricCard = (icon, label, val, unit, sub, subCol) => {
+      return `
+        <div class="p-4 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.02] transition-transform">
+          <div class="mb-3 opacity-80">${icon}</div>
+          <div class="flex items-end gap-1 mb-1">
+            <span class="text-2xl font-black tracking-tight">${val}</span>
+            <span class="text-[10px] font-bold text-muted-foreground mb-1 uppercase">${unit}</span>
+          </div>
+          <p class="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-1">${label}</p>
+          <p class="text-[9px] font-bold ${subCol}">${sub}</p>
+        </div>
+      `;
+    };
+
+    const precipCard = (total24h, perH) => {
+      const hasRain = total24h > 0;
+      const barWidth = Math.min(100, (total24h / 30) * 100);
+      return `
+        <div class="p-4 rounded-3xl border border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.02] transition-transform col-span-2 md:col-span-1">
+          <div class="mb-3 opacity-80">${Icons.CloudRain(20)}</div>
+          <div class="flex items-end justify-between gap-2 mb-1">
+            <div class="flex items-end gap-1">
+              <span class="text-2xl font-black tracking-tight ${hasRain ? 'text-blue-400' : ''}">${total24h}</span>
+              <span class="text-[10px] font-bold text-muted-foreground mb-1 uppercase">mm</span>
+            </div>
+            <div class="flex items-end gap-1">
+              <span class="text-sm font-bold text-muted-foreground">${perH}</span>
+              <span class="text-[9px] font-bold text-muted-foreground/60 mb-0.5">mm/h</span>
+            </div>
+          </div>
+          <p class="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-2">Pluviométrie</p>
+          <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-700 ${hasRain ? 'bg-gradient-to-r from-sky-400 to-blue-500' : 'bg-border'}" style="width: ${Math.max(barWidth, hasRain ? 4 : 0)}%"></div>
+          </div>
+          <p class="text-[9px] font-bold text-muted-foreground mt-1.5">Cumul 24h · ${hasRain ? `${perH} mm/h actuellement` : 'Pas de précipitation'}</p>
+        </div>
+      `;
+    };
+
+    const renderSearch = () => {
+      const container = document.getElementById('search-container');
+      container.innerHTML = `
+        <div class="relative w-full group">
+          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
+            ${Icons.Search(18)}
+          </div>
+          <input type="text" id="city-input" placeholder="Saisir une ville..." 
+                 class="w-full h-11 pl-12 pr-12 bg-secondary/50 border border-transparent focus:border-primary focus:bg-background rounded-2xl text-sm font-medium transition-all outline-none"
+                 oninput="handleSearchInput(this.value)"
+                 onkeydown="if(event.key === 'Enter') handleSearchSubmit(this.value)">
+          <button onclick="handleGeolocation()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-primary transition-colors">
+            ${Icons.Navigation(18)}
+          </button>
+
+          <div id="search-results" class="hidden absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-50">
+          </div>
+        </div>
+      `;
+    };
+
+    let searchTimeout;
+    const handleSearchInput = async (val) => {
+      clearTimeout(searchTimeout);
+      if (val.length < 2) {
+        document.getElementById('search-results').classList.add('hidden');
+        return;
+      }
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=5&language=fr&format=json`);
+          const data = await res.json();
+          renderSearchResults(data.results || []);
+        } catch (e) {}
+      }, 300);
+    };
+
+    const handleSearchSubmit = async (val) => {
+      if (val.length < 2) return;
+      clearTimeout(searchTimeout);
+      document.getElementById('search-results').classList.add('hidden');
+      try {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(val)}&count=1&language=fr&format=json`);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          selectCity(data.results[0]);
+        } else {
+          showToast("Ville non trouvée. Veuillez vérifier l'orthographe.", "error");
+        }
+      } catch (e) {
+        showToast("Erreur lors de la recherche de la ville.", "error");
+      }
+    };
+
+    const renderSearchResults = (results) => {
+      const el = document.getElementById('search-results');
+      if (results.length === 0) {
+        el.classList.add('hidden');
+        return;
+      }
+
+      el.classList.remove('hidden');
+      el.innerHTML = results.map(r => `
+        <button onclick="selectCity(${JSON.stringify(r).replace(/"/g, '&quot;')})" 
+                class="w-full flex items-center gap-3 p-4 text-left hover:bg-accent border-b border-border/50 last:border-0 transition-colors">
+          <div class="p-2 rounded-lg bg-secondary">${Icons.MapPin(16, "text-primary")}</div>
+          <div>
+            <p class="text-sm font-bold">${r.name}</p>
+            <p class="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">${r.admin1 || ''}, ${r.country}</p>
+          </div>
+        </button>
+      `).join('');
+    };
+
+    const selectCity = (city) => {
+      document.getElementById('city-input').value = city.name;
+      document.getElementById('search-results').classList.add('hidden');
+      state.lastCity = {
+        name: city.name,
+        latitude: city.latitude,
+        longitude: city.longitude,
+        region: city.admin1
+      };
+      fetchWeather(state.lastCity);
+    };
+
+    const handleGeolocation = async () => {
+      if (!navigator.geolocation) {
+        showToast("Géolocalisation indisponible. Veuillez saisir une ville.", "error");
+        return;
+      }
+
+      const btn = document.querySelector('[onclick="handleGeolocation()"]');
+      const originalIcon = btn.innerHTML;
+      btn.innerHTML = Icons.Loader2(18);
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
+          const data = await res.json();
+          const city = {
+            name: data.address.city || data.address.town || data.address.village || "Ma position",
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            region: data.address.state || data.address.province
+          };
+          selectCity(city);
+        } catch (e) {
+          selectCity({ name: "Ma position", latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        }
+        btn.innerHTML = originalIcon;
+      }, () => {
+        showToast("Géolocalisation indisponible. Veuillez saisir une ville.", "error");
+        btn.innerHTML = originalIcon;
+      });
+    };
+
+    const setActiveTab = (tab) => {
+      state.activeTab = tab;
+      render();
+    };
+
+    const retry = () => {
+      fetchWeather(state.lastCity);
+    };
+
+    // --- INITIALIZATION ---
+    const init = () => {
+      // Enregistrement du Service Worker pour la PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('Service Worker enregistré avec succès ! Scope:', reg.scope))
+            .catch(err => console.error('Échec de l\'enregistrement du Service Worker:', err));
+        });
+      }
+
+      // Theme
+      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon').textContent = '🌙';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('theme-icon').textContent = '☀️';
+      }
+
+      document.getElementById('theme-toggle').onclick = () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+      };
+
+      // Close search results on click outside
+      document.addEventListener('click', (e) => {
+        const searchContainer = document.getElementById('search-container');
+        const resultsEl = document.getElementById('search-results');
+        if (searchContainer && !searchContainer.contains(e.target) && resultsEl) {
+          resultsEl.classList.add('hidden');
+        }
+      });
+
+      // Online / Offline handlers
+      window.addEventListener('online', () => {
+        if (state.isOffline) {
+          showToast("Connexion internet restaurée. Actualisation...", "success");
+          fetchWeather(state.lastCity, true);
+        }
+      });
+      window.addEventListener('offline', () => {
+        state.isOffline = true;
+        showToast("Connexion perdue. Mode hors-ligne activé.", "error");
+        render();
+      });
+
+      // Initial Load with Cache
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { timestamp, data, city } = JSON.parse(cached);
+        state.data = data;
+        state.lastCity = city;
+        render();
+      } else {
+        fetchWeather(state.lastCity);
+      }
+    };
+
+    init();
+  </script>
+</body>
+</html>
