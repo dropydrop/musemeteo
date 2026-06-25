@@ -1,3 +1,5 @@
+const VERSION = '4.0.0'; // CHANGER CE NUMÉRO À CHAQUE NOUVELLE MISE À JOUR POUR LE PWA
+
 // Génère un ID unique à chaque activation/déploiement pour forcer la mise à jour
 const CACHE_NAME = 'musemeteo-v-' + Date.now(); 
 
