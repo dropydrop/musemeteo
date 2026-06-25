@@ -1,10 +1,12 @@
-const CACHE_NAME = 'musemeteo-v4';
+// Génère un ID unique à chaque activation/déploiement pour forcer la mise à jour
+const CACHE_NAME = 'musemeteo-v-' + Date.now(); 
+
 const ASSETS = [
+  './',
   './index.html',
   './manifest.json'
 ];
 
-// Installation & mise en cache des assets de base (pas les données API)
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -18,6 +20,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
+          // Supprime TOUS les anciens caches qui ne correspondent pas au timestamp actuel
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
@@ -27,13 +30,14 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Interception des requêtes : Réseau en priorité, pas de mise en cache agressive des données météo
 self.addEventListener('fetch', (e) => {
+  // Stratégie pour la navigation principale (index.html)
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).catch(() => caches.match('./index.html'))
     );
     return;
   }
+  // Pour le reste (API Open-Meteo, Tailwind CDN), on passe direct par le réseau
   e.respondWith(fetch(e.request));
 });
