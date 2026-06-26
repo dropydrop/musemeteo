@@ -900,6 +900,8 @@
         state.data = data;
         state.lastCity = city;
         render();
+        // Rafraîchissement en arrière-plan
+        fetchWeather(city, true); 
       } else {
         fetchWeather(state.lastCity);
       }
