@@ -446,6 +446,16 @@
         });
       }
 
+      const parseH = (h) => h ? parseInt(h.slice(0,2)) : 0;
+const dureeJour = (sunrise, sunset) => {
+        const sr = parseH(sunrise);
+        const ss = parseH(sunset);
+        let durH = ss - sr;
+        let durM = 0;
+        if (durH < 0) { durH += 24; }
+        if (durH >= 12) { durM = ((durH - 12) * 60) % 60; durH = 12; }
+        return `${durH}h${durM > 9 ? durM : "0" + durM}`;
+      };
       const daily = (w.daily?.time || []).map((t, i) => ({
         date: t,
         day: new Date(t).toLocaleDateString('fr-FR', { weekday: 'short' }),
@@ -455,7 +465,8 @@
         precipProb: getVal(w.daily, "precipitation_probability_max", i) ?? 0,
         precipSum: getVal(w.daily, "precipitation_sum", i) ?? 0,
         windMax: Math.round(getVal(w.daily, "wind_speed_10m_max", i) ?? 0),
-        confidence: (() => { try { return computeConfidence(w.daily, i) } catch(e) { return 50 } })()
+        confidence: (() => { try { return computeConfidence(w.daily, i) } catch(e) { return 50 } })(),
+        dureeJour: dureeJour(getVal(w.daily, "sunrise", i), getVal(w.daily, "sunset", i))
       }));
 
       const current = w.current || {};
@@ -554,7 +565,7 @@
                   <p class="text-[11px] text-muted-foreground font-medium">${d.region}</p>
                 </div>
                 <div class="flex flex-col items-end gap-2">
-                  ${state.isOffline ? `<div class="flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold text-orange-400 uppercase tracking-tight"><span>Hors ligne</span> <Icons.ShieldCheck(10, "text-orange-400")/></div>` : `<div class="flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold text-emerald-400 uppercase tracking-tight"><span>En ligne</span> <Icons.ShieldCheck(10, "text-emerald-400")/></div>`}
+                  ${state.isOffline ? `<div class="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 text-[7px] font-bold uppercase text-orange-400 tracking-tight"><span>Hors ligne</span> <Icons.ShieldCheck(8, "text-orange-400")/></div>` : `<div class="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 text-[7px] font-bold uppercase text-emerald-400 tracking-tight"><span>En ligne</span> <Icons.ShieldCheck(8, "text-emerald-400")/></div>`}
                 </div>
               </div>
 
@@ -573,6 +584,7 @@
                 <div class="flex flex-wrap gap-3">
                    ${badge("🌅 " + d.sunrise)}
                    ${badge("🌇 " + d.sunset)}
+                   ${badge(d.dureeJour)}
                    ${badge(Icons.Droplets(14) + " " + d.humidity + "%")}
                    ${badge(Icons.Wind(14) + " " + d.wind + "-" + d.gusts + " km/h")}
                 </div>
@@ -591,10 +603,10 @@
                     <div class="${getWmo(h.code).color}">${getWmo(h.code).icon(28)}</div>
                     <span class="text-lg font-black">${h.temp}°</span>
                     <div class="w-full space-y-2">
-<div class="flex justify-between text-[9px] font-bold text-muted-foreground uppercase">
+<div class="flex justify-between text-[9px] font-bold text-muted-foreground uppercase items-baseline">
                          <span>Pluie</span>
-                         ${Icons.ShieldCheck(10, "text-blue-400")}
-                         <span class="text-blue-400">${h.prob}%</span>
+${Icons.ShieldCheck(10, "text-blue-400")}
+                          <span class="text-blue-400 align-middle">${h.prob}%</span>
                         </div>
                        <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                          <div class="h-full bg-blue-500 transition-all duration-1000" style="width: ${h.prob}%"></div>
