@@ -446,15 +446,17 @@
         });
       }
 
-      const parseH = (h) => h && h.includes('T') ? parseInt(h.split('T')[1]?.slice(0,2)||'0') : 0;
-const dureeJour = (sunrise, sunset) => {
-        const sr = parseH(sunrise);
-        const ss = parseH(sunset);
-        let durH = ss - sr;
-        let durM = 0;
-        if (durH < 0) { durH += 24; }
-        if (durH >= 12) { durM = ((durH - 12) * 60) % 60; durH = 12; }
-        return `${durH}h${durM > 9 ? durM : "0" + durM}`;
+      const parseHM = (t) => {
+        if (!t || !t.includes('T')) return { h: 0, m: 0 };
+        const hm = (t.split('T')[1] || '').split(':').map(Number);
+        return { h: isNaN(hm[0]) ? 0 : hm[0], m: isNaN(hm[1]) ? 0 : hm[1] };
+      };
+      const dureeJour = (sunrise, sunset) => {
+        const sr = parseHM(sunrise);
+        const ss = parseHM(sunset);
+        let min = (ss.h * 60 + ss.m) - (sr.h * 60 + sr.m);
+        if (min < 0) min += 24 * 60;
+        return `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}`;
       };
       const daily = (w.daily?.time || []).map((t, i) => ({
         date: t,
