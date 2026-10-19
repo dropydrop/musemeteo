@@ -587,6 +587,7 @@
                    ${badge("🌅 " + d.sunrise)}
                    ${badge("🌇 " + d.sunset)}
                    ${badge("☀️ " + d.dureeJour)}
+                   ${badge(`<span class="${getUvInfo(d.uv).color}">UV ${d.uv || 0}</span>`)}
                    ${badge(Icons.Droplets(14) + " " + d.humidity + "%")}
                    ${badge(Icons.Wind(14) + " " + d.wind + "-" + d.gusts + " km/h")}
                 </div>
@@ -664,7 +665,6 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
                 ${metricCard(Icons.Thermometer(20), "Sol 6cm", d.soilTemp, "°C", "T° sol profondeur", "text-amber-400")}
                 ${metricCard(Icons.Activity(20), "Delta T", d.deltaT, "°C", getDeltaTStatus(d.deltaT).label, getDeltaTStatus(d.deltaT).color)}
                 ${metricCard(Icons.Activity(20), "Qualité Air", d.aqi || 0, "EAQI", `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 ${getAqiInfo(d.aqi).color}">Air : ${getAqiInfo(d.aqi).label}</span>`, "")}
-                ${metricCard(Icons.Sun(20), "Indice UV", d.uv || 0, "Index", `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 ${getUvInfo(d.uv).color}">UV : ${d.uv}</span>`, "")}
              </div>
           </div>
 
