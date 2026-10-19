@@ -607,12 +607,10 @@
                     <div class="${getWmo(h.code).color}">${getWmo(h.code).icon(28)}</div>
                     <span class="text-lg font-black">${h.temp}°</span>
                     <div class="w-full space-y-2">
-                       <div class="flex items-center justify-between gap-3 text-xs font-bold text-muted-foreground uppercase">
+                       <div class="flex items-center justify-center gap-1.5 text-xs font-bold text-muted-foreground uppercase">
                          <span class="text-[11px]">Pluie</span>
-                         <span class="inline-flex items-center gap-1 text-blue-400">
-                           ${Icons.ShieldCheck(12, "text-blue-400")}
-                           <span>${h.prob}%</span>
-                         </span>
+                         ${Icons.ShieldCheck(12, "text-blue-400")}
+                         <span class="text-blue-400">${h.prob}%</span>
                        </div>
                        <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                          <div class="h-full bg-blue-500 transition-all duration-1000" style="width: ${h.prob}%"></div>
