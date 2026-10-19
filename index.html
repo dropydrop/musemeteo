@@ -101,7 +101,7 @@
           <div class="w-8 h-8 rounded-xl border border-border bg-card/50 flex items-center justify-center shadow-sm">
             <div id="icon-logo" class="text-foreground"></div>
           </div>
-          <span class="text-base font-bold tracking-tight hidden sm:inline">MuseMeteo</span>
+          <span class="text-lg font-bold tracking-tight hidden sm:inline">MuseMeteo</span>
         </div>
         <div class="flex-1 relative" id="search-container"></div>
         <button id="theme-toggle" class="p-2.5 rounded-xl border border-border bg-card/50 hover:bg-accent transition-all shadow-sm">
@@ -245,7 +245,7 @@
       const icon = type === 'error' ? Icons.AlertTriangle(16, "shrink-0") : Icons.ShieldCheck(16, "shrink-0");
       toast.innerHTML = `
         ${icon}
-        <span class="text-xs font-bold leading-none">${msg}</span>
+        <span class="text-sm font-bold leading-none">${msg}</span>
       `;
       document.body.appendChild(toast);
 
@@ -532,7 +532,7 @@
             <div class="bg-red-500/10 p-4 rounded-full mb-4">${Icons.AlertTriangle(48, "text-red-500")}</div>
             <h2 class="text-xl font-bold mb-2">Oups ! Une erreur est survenue</h2>
             <p class="text-muted-foreground max-w-sm mb-4">${state.error}</p>
-            ${state.errorStack ? `<details class="text-left text-[10px] text-muted-foreground mb-6 max-w-xs overflow-auto"><summary>Détails techniques</summary><pre class="mt-2">${state.errorStack}</pre></details>` : ''}
+            ${state.errorStack ? `<details class="text-left text-xs text-muted-foreground mb-6 max-w-xs overflow-auto"><summary>Détails techniques</summary><pre class="mt-2">${state.errorStack}</pre></details>` : ''}
             <button onclick="retry()" class="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Réessayer</button>
           </div>`;
         return;
@@ -564,10 +564,10 @@
                 <div class="space-y-1">
                   <div class="flex items-center gap-2 text-foreground/80">
                     ${Icons.MapPin(16)}
-                    <span class="text-sm font-bold uppercase tracking-widest">${d.city}</span>
-                    ${state.isOffline ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400"><span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span><span class="text-[9px] font-bold uppercase tracking-tight">Hors ligne</span></span>` : `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="text-[9px] font-bold uppercase tracking-tight">En ligne</span></span>`}
+                    <span class="text-base font-bold uppercase tracking-widest">${d.city}</span>
+                    ${state.isOffline ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-400"><span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span><span class="text-[11px] font-bold uppercase tracking-tight">Hors ligne</span></span>` : `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="text-[11px] font-bold uppercase tracking-tight">En ligne</span></span>`}
                   </div>
-                  <p class="text-[11px] text-muted-foreground font-medium">${d.region}</p>
+                  <p class="text-sm text-muted-foreground font-medium">${d.region}</p>
 </div>
                 <!-- Badge now inline above, removed absolute positioning -->
               </div>
@@ -578,19 +578,19 @@
                     <span class="text-7xl md:text-8xl font-bold tracking-tighter leading-none ${getTempColor(d.temp)}">${d.temp}°</span>
                   </div>
                   <div class="flex items-center gap-3 mt-4">
-                    <span class="text-sm font-semibold text-foreground/90">${wmo.label}</span>
+                    <span class="text-base font-semibold text-foreground/90">${wmo.label}</span>
                     <div class="h-4 w-px bg-foreground/20"></div>
-                    <span class="text-xs font-medium text-muted-foreground">Ressenti <b class="text-foreground">${d.feels}°</b></span>
+                    <span class="text-sm font-medium text-muted-foreground">Ressenti <b class="text-foreground">${d.feels}°</b></span>
                   </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                   ${badge(Icons.Sunrise(15), d.sunrise)}
-                   ${badge(Icons.Sunset(15), d.sunset)}
-                   ${badge(Icons.Sun(15), d.dureeJour)}
-                   ${badge(Icons.Uv(15), "UV " + (d.uv || 0))}
-                   ${badge(Icons.Droplets(15), d.humidity + "%")}
-                   ${badge(Icons.Wind(15), d.wind + "-" + d.gusts + " km/h")}
+                   ${badge(Icons.Sunrise(26), d.sunrise)}
+                   ${badge(Icons.Sunset(26), d.sunset)}
+                   ${badge(Icons.Sun(26), d.dureeJour)}
+                   ${badge(Icons.Uv(26), "UV " + (d.uv || 0))}
+                   ${badge(Icons.Droplets(26), d.humidity + "%")}
+                   ${badge(Icons.Wind(26), d.wind + "-" + d.gusts + " km/h")}
                 </div>
               </div>
             </div>
@@ -598,16 +598,16 @@
 
           <!-- Hourly Scroll -->
           <div class="space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Prochaines 24 heures</h3>
+            <h3 class="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Prochaines 24 heures</h3>
             <div class="overflow-x-auto pb-4 -mx-1 px-1">
               <div class="flex gap-3">
                 ${d.hourly.map((h, i) => `
                   <div class="flex flex-col items-center gap-3 p-4 min-w-[100px] rounded-2xl border ${i===0 ? 'bg-primary/10 border-primary/30' : 'bg-card/50 border-border/50'} backdrop-blur-sm">
-                    <span class="text-[11px] font-black uppercase ${i===0 ? 'text-primary' : 'text-muted-foreground'}">${i===0 ? 'Maint.' : h.time}</span>
+                    <span class="text-sm font-black uppercase ${i===0 ? 'text-primary' : 'text-muted-foreground'}">${i===0 ? 'Maint.' : h.time}</span>
                     <div class="${getWmo(h.code).color}">${getWmo(h.code).icon(28)}</div>
                     <span class="text-lg font-black">${h.temp}°</span>
                     <div class="w-full space-y-2">
-<div class="flex justify-between text-[9px] font-bold text-muted-foreground uppercase">
+<div class="flex justify-between text-xs font-bold text-muted-foreground uppercase">
                          <span>Pluie</span>
 ${Icons.ShieldCheck(10, "text-blue-400")}
                           <span class="text-blue-400 align-middle">${h.prob}%</span>
@@ -615,8 +615,8 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
                        <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                          <div class="h-full bg-blue-500 transition-all duration-1000" style="width: ${h.prob}%"></div>
                        </div>
-                       <div class="text-center text-[9px] font-medium text-muted-foreground uppercase">
-                         💨 ${h.windSpeed} <span class="text-[7px]">km/h</span>
+                       <div class="text-center text-xs font-medium text-muted-foreground uppercase">
+                         💨 ${h.windSpeed} <span class="text-[10px]">km/h</span>
                        </div>
                     </div>
                   </div>
@@ -627,7 +627,7 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
 
           <!-- 7 Day Forecast -->
           <div class="space-y-4">
-            <h3 class="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Prévisions 7 jours</h3>
+            <h3 class="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Prévisions 7 jours</h3>
             <div class="space-y-2">
               ${d.daily.map((day, i) => `
                 <div class="flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:bg-accent/30 transition-colors group">
@@ -635,22 +635,22 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
                   <div class="shrink-0 ${getWmo(day.code).color}">${getWmo(day.code).icon(24)}</div>
 
                   <div class="hidden sm:flex items-center gap-2 w-20">
-                    <span class="text-[10px] font-bold text-blue-400">${day.precipProb}%</span>
-                    <span class="text-[10px] text-muted-foreground/60">${day.precipSum}mm</span>
+                    <span class="text-xs font-bold text-blue-400">${day.precipProb}%</span>
+                    <span class="text-xs text-muted-foreground/60">${day.precipSum}mm</span>
                   </div>
 
                   <div class="flex-1 flex items-center gap-3">
-                    <span class="text-xs font-bold text-blue-400 w-8 text-right">${day.tempMin}°</span>
+                    <span class="text-sm font-bold text-blue-400 w-8 text-right">${day.tempMin}°</span>
                     <div class="flex-1 h-2 rounded-full bg-muted relative overflow-hidden">
                        <div class="absolute inset-0 bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400 opacity-20"></div>
                        <div class="h-full bg-gradient-to-r from-blue-400 via-emerald-400 to-amber-400 rounded-full" style="width: 100%; opacity: 0.1"></div>
                     </div>
-                    <span class="text-xs font-bold text-amber-500 w-8">${day.tempMax}°</span>
+                    <span class="text-sm font-bold text-amber-500 w-8">${day.tempMax}°</span>
                   </div>
 
                   <div class="flex items-center gap-2 px-3 py-1 rounded-full border border-border/50 bg-muted/50">
                     ${Icons.ShieldCheck(12, day.confidence > 70 ? "text-emerald-400" : (day.confidence > 40 ? "text-amber-400" : "text-red-400"))}
-                    <span class="text-[10px] font-black">${day.confidence}%</span>
+                    <span class="text-xs font-black">${day.confidence}%</span>
                   </div>
                 </div>
               `).join('')}
@@ -659,13 +659,13 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
 
           <!-- Agricultural Metrics -->
           <div class="space-y-4">
-             <h3 class="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Indicateurs Agricoles</h3>
+             <h3 class="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Indicateurs Agricoles</h3>
              <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                 ${precipCard(d.precip24h, d.precipH)}
                 ${metricCard(Icons.Sprout(20), "ETP", d.etp.toFixed(1), "mm/h", "Evapotranspiration FAO", "text-emerald-400")}
                 ${metricCard(Icons.Thermometer(20), "Sol 6cm", d.soilTemp, "°C", "T° sol profondeur", "text-amber-400")}
                 ${metricCard(Icons.Activity(20), "Delta T", d.deltaT, "°C", getDeltaTStatus(d.deltaT).label, getDeltaTStatus(d.deltaT).color)}
-                ${metricCard(Icons.Activity(20), "Qualité Air", d.aqi || 0, "EAQI", `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 ${getAqiInfo(d.aqi).color}">Air : ${getAqiInfo(d.aqi).label}</span>`, "")}
+                ${metricCard(Icons.Activity(20), "Qualité Air", d.aqi || 0, "EAQI", `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 ${getAqiInfo(d.aqi).color}">Air : ${getAqiInfo(d.aqi).label}</span>`, "")}
              </div>
           </div>
 
@@ -676,12 +676,12 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
                target="_blank" rel="noopener noreferrer"
                class="flex items-center justify-center gap-3 w-full px-5 py-4 rounded-2xl border border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 transition-all duration-200 group shadow-sm hover:shadow-blue-500/10 hover:shadow-md">
               <span class="shrink-0">${Icons.CloudRain(20, "text-blue-400 group-hover:text-blue-300 transition-colors")}</span>
-              <span class="text-sm font-bold tracking-tight">Ouvrir le radar de pluie en temps réel</span>
+              <span class="text-base font-bold tracking-tight">Ouvrir le radar de pluie en temps réel</span>
               <span class="ml-auto text-base leading-none">↗</span>
             </a>
             <!-- Source + Refresh -->
             <div class="flex items-center justify-end gap-4">
-              <button onclick="retry()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-accent text-[10px] font-bold uppercase transition-all shrink-0">
+              <button onclick="retry()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-accent text-xs font-bold uppercase transition-all shrink-0">
                 ${Icons.RefreshCw(12)} Actualiser
               </button>
             </div>
@@ -691,7 +691,7 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
     };
 
     const badge = (icon, text) => {
-      return `<span class="inline-flex items-center justify-center h-[42px] px-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-xs font-bold text-foreground/90 whitespace-nowrap"><span class="flex flex-col items-center justify-center gap-0.5 leading-none"><span class="flex items-center justify-center h-4">${icon}</span><span>${text}</span></span></span>`;
+      return `<span class="inline-flex items-center justify-center px-4 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-sm font-bold text-foreground/90 whitespace-nowrap"><span class="flex flex-col items-center justify-center gap-1 leading-none"><span class="flex items-center justify-center h-7">${icon}</span><span>${text}</span></span></span>`;
     };
 
     const metricCard = (icon, label, val, unit, sub, subCol) => {
@@ -700,10 +700,10 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
           <div class="mb-3 opacity-80">${icon}</div>
           <div class="flex items-end gap-1 mb-1">
             <span class="text-2xl font-black tracking-tight">${val}</span>
-            <span class="text-[10px] font-bold text-muted-foreground mb-1 uppercase">${unit}</span>
+            <span class="text-xs font-bold text-muted-foreground mb-1 uppercase">${unit}</span>
           </div>
-          <p class="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-1">${label}</p>
-          <p class="text-[9px] font-bold ${subCol}">${sub}</p>
+          <p class="text-xs font-black uppercase text-muted-foreground tracking-wider mb-1">${label}</p>
+          <p class="text-xs font-bold ${subCol}">${sub}</p>
         </div>
       `;
     };
@@ -717,18 +717,18 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
           <div class="flex items-end justify-between gap-2 mb-1">
             <div class="flex items-end gap-1">
               <span class="text-2xl font-black tracking-tight ${hasRain ? 'text-blue-400' : ''}">${total24h}</span>
-              <span class="text-[10px] font-bold text-muted-foreground mb-1 uppercase">mm</span>
+              <span class="text-xs font-bold text-muted-foreground mb-1 uppercase">mm</span>
             </div>
             <div class="flex items-end gap-1">
-              <span class="text-sm font-bold text-muted-foreground">${perH}</span>
-              <span class="text-[9px] font-bold text-muted-foreground/60 mb-0.5">mm/h</span>
+              <span class="text-base font-bold text-muted-foreground">${perH}</span>
+              <span class="text-xs font-bold text-muted-foreground/60 mb-0.5">mm/h</span>
             </div>
           </div>
-          <p class="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-2">Pluviométrie</p>
+          <p class="text-xs font-black uppercase text-muted-foreground tracking-wider mb-2">Pluviométrie</p>
           <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
             <div class="h-full rounded-full transition-all duration-700 ${hasRain ? 'bg-gradient-to-r from-sky-400 to-blue-500' : 'bg-border'}" style="width: ${Math.max(barWidth, hasRain ? 4 : 0)}%"></div>
           </div>
-          <p class="text-[9px] font-bold text-muted-foreground mt-1.5">Cumul 24h · ${hasRain ? `${perH} mm/h actuellement` : 'Pas de précipitation'}</p>
+          <p class="text-xs font-bold text-muted-foreground mt-1.5">Cumul 24h · ${hasRain ? `${perH} mm/h actuellement` : 'Pas de précipitation'}</p>
         </div>
       `;
     };
@@ -741,7 +741,7 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
             ${Icons.Search(18)}
           </div>
           <input type="text" id="city-input" placeholder="Saisir une ville..." 
-                 class="w-full h-11 pl-12 pr-12 bg-secondary/50 border border-transparent focus:border-primary focus:bg-background rounded-2xl text-sm font-medium transition-all outline-none"
+                 class="w-full h-11 pl-12 pr-12 bg-secondary/50 border border-transparent focus:border-primary focus:bg-background rounded-2xl text-base font-medium transition-all outline-none"
                  oninput="handleSearchInput(this.value)"
                  onkeydown="if(event.key === 'Enter') handleSearchSubmit(this.value)">
           <button onclick="handleGeolocation()" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-primary transition-colors">
@@ -801,8 +801,8 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
                 class="w-full flex items-center gap-3 p-4 text-left hover:bg-accent border-b border-border/50 last:border-0 transition-colors">
           <div class="p-2 rounded-lg bg-secondary">${Icons.MapPin(16, "text-primary")}</div>
           <div>
-            <p class="text-sm font-bold">${r.name}</p>
-            <p class="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">${r.admin1 || ''}, ${r.country}</p>
+            <p class="text-base font-bold">${r.name}</p>
+            <p class="text-xs text-muted-foreground font-medium uppercase tracking-wider">${r.admin1 || ''}, ${r.country}</p>
           </div>
         </button>
       `).join('');
