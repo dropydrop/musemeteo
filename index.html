@@ -584,9 +584,9 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                   ${badge("🌅", d.sunrise)}
-                   ${badge("🌇", d.sunset)}
-                   ${badge("☀️", d.dureeJour)}
+                   ${badge(Icons.Sunrise(13), d.sunrise)}
+                   ${badge(Icons.Sunset(13), d.sunset)}
+                   ${badge(Icons.Sun(13), d.dureeJour)}
                    ${badge(Icons.Sun(13), "UV " + (d.uv || 0))}
                    ${badge(Icons.Droplets(13), d.humidity + "%")}
                    ${badge(Icons.Wind(13), d.wind + "-" + d.gusts + " km/h")}
@@ -690,7 +690,7 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
     };
 
     const badge = (icon, text) => {
-      return `<span class="inline-flex px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-xs font-bold text-foreground/90 whitespace-nowrap"><span class="flex flex-col items-center justify-center gap-0.5 leading-none"><span class="flex items-center justify-center h-3.5 text-[13px]">${icon}</span><span>${text}</span></span></span>`;
+      return `<span class="inline-flex items-center justify-center h-[42px] px-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-xs font-bold text-foreground/90 whitespace-nowrap"><span class="flex flex-col items-center justify-center gap-0.5 leading-none"><span class="flex items-center justify-center h-3.5 text-[13px]">${icon}</span><span>${text}</span></span></span>`;
     };
 
     const metricCard = (icon, label, val, unit, sub, subCol) => {
