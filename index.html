@@ -580,17 +580,17 @@
                   <div class="flex items-center gap-3 mt-4">
                     <span class="text-base font-semibold text-foreground/90">${wmo.label}</span>
                     <div class="h-4 w-px bg-foreground/20"></div>
-                    <span class="text-sm font-medium text-muted-foreground">Ressenti <b class="text-foreground">${d.feels}°</b></span>
+                    <span class="text-sm font-medium text-foreground">Ressenti <b>${d.feels}°</b></span>
                   </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                   ${badge(Icons.Sunrise(26), d.sunrise)}
-                   ${badge(Icons.Sunset(26), d.sunset)}
-                   ${badge(Icons.Sun(26), d.dureeJour)}
-                   ${badge(Icons.Uv(26), "UV " + (d.uv || 0))}
-                   ${badge(Icons.Droplets(26), d.humidity + "%")}
-                   ${badge(Icons.Wind(26), d.wind + "-" + d.gusts + " km/h")}
+                   ${badge(Icons.Sunrise(20), d.sunrise)}
+                   ${badge(Icons.Sunset(20), d.sunset)}
+                   ${badge(Icons.Sun(20), d.dureeJour)}
+                   ${badge(Icons.Uv(20), "UV " + (d.uv || 0))}
+                   ${badge(Icons.Droplets(20), d.humidity + "%")}
+                   ${badge(Icons.Wind(20), d.wind + "-" + d.gusts + " km/h")}
                 </div>
               </div>
             </div>
@@ -607,11 +607,13 @@
                     <div class="${getWmo(h.code).color}">${getWmo(h.code).icon(28)}</div>
                     <span class="text-lg font-black">${h.temp}°</span>
                     <div class="w-full space-y-2">
-<div class="flex justify-between text-xs font-bold text-muted-foreground uppercase">
+                       <div class="flex items-center justify-between text-xs font-bold text-muted-foreground uppercase">
                          <span>Pluie</span>
-${Icons.ShieldCheck(10, "text-blue-400")}
-                          <span class="text-blue-400 align-middle">${h.prob}%</span>
-                        </div>
+                         <span class="inline-flex items-center gap-1 text-blue-400">
+                           ${Icons.ShieldCheck(12, "text-blue-400")}
+                           <span>${h.prob}%</span>
+                         </span>
+                       </div>
                        <div class="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                          <div class="h-full bg-blue-500 transition-all duration-1000" style="width: ${h.prob}%"></div>
                        </div>
@@ -691,7 +693,7 @@ ${Icons.ShieldCheck(10, "text-blue-400")}
     };
 
     const badge = (icon, text) => {
-      return `<span class="inline-flex items-center justify-center px-4 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-sm font-bold text-foreground/90 whitespace-nowrap"><span class="flex flex-col items-center justify-center gap-1 leading-none"><span class="flex items-center justify-center h-7">${icon}</span><span>${text}</span></span></span>`;
+      return `<span class="inline-flex items-center justify-center px-4 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-sm font-bold text-foreground/90 whitespace-nowrap"><span class="flex flex-col items-center justify-center gap-1 leading-none"><span class="flex items-center justify-center h-6">${icon}</span><span>${text}</span></span></span>`;
     };
 
     const metricCard = (icon, label, val, unit, sub, subCol) => {
