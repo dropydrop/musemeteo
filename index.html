@@ -587,7 +587,7 @@
                    ${badge("🌅 " + d.sunrise)}
                    ${badge("🌇 " + d.sunset)}
                    ${badge("☀️ " + d.dureeJour)}
-                   ${badge(`<span class="${getUvInfo(d.uv).color}">UV ${d.uv || 0}</span>`)}
+                   ${badge(`<span class="flex flex-col items-center leading-tight"><span class="text-[9px] font-bold uppercase tracking-wider text-foreground/90">UV</span><span class="text-xs font-bold text-foreground/90">${d.uv || 0}</span></span>`)}
                    ${badge(Icons.Droplets(14) + " " + d.humidity + "%")}
                    ${badge(Icons.Wind(14) + " " + d.wind + "-" + d.gusts + " km/h")}
                 </div>
